@@ -1,1 +1,3 @@
 # glRenderer
+
+OpenGL abstraction
