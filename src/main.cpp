@@ -55,7 +55,7 @@ int main(void)
 
     Shader shader("res/shaders/vertex.shader", "res/shaders/frag.shader");
     shader.Bind();
-    shader.setVec4("color", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    shader.SetVec4("color", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
     va.Unbind();
     shader.Unbind();
