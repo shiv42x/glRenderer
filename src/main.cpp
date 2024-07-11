@@ -1,11 +1,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Renderer.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"   
-#include "VertexArray.h"
-#include "Shader.h"
+#include "OpenGL/Renderer.h"
+#include "OpenGL/VertexBuffer.h"
+#include "OpenGL/IndexBuffer.h"   
+#include "OpenGL/VertexArray.h"
+#include "OpenGL/Shader.h"
+
+#include <glm/glm.hpp>
 
 #include <iostream>
 
@@ -62,19 +64,16 @@ int main(void)
     vb.Unbind();
     ib.Unbind();
 
+    Renderer renderer;
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+        /* Clear screen  */
+        renderer.Clear();
 
         /* Drawing */
-        shader.Bind();
-        va.Bind();
-        ib.Bind();
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-
+        renderer.Draw(va, ib, shader);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
