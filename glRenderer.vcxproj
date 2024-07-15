@@ -159,7 +159,8 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\OpenGL\Renderer.cpp" />
     <ClCompile Include="src\OpenGL\Shader.cpp" />
-    <ClCompile Include="src\stb_image.cpp" />
+    <ClCompile Include="src\OpenGL\Texture.cpp" />
+    <ClCompile Include="vendor\include\stb_image\stb_image.cpp" />
     <ClCompile Include="src\OpenGL\VertexArray.cpp" />
     <ClCompile Include="vendor\include\glad\src\glad.c" />
     <ClCompile Include="src\OpenGL\VertexBuffer.cpp" />
@@ -168,7 +169,8 @@
     <ClInclude Include="src\OpenGL\Shader.h" />
     <ClInclude Include="src\OpenGL\IndexBuffer.h" />
     <ClInclude Include="src\OpenGL\Renderer.h" />
-    <ClInclude Include="src\stb_image.h" />
+    <ClInclude Include="src\OpenGL\Texture.h" />
+    <ClInclude Include="vendor\include\stb_image\stb_image.h" />
     <ClInclude Include="src\OpenGL\VertexArray.h" />
     <ClInclude Include="src\OpenGL\VertexBuffer.h" />
     <ClInclude Include="src\OpenGL\VertexBufferLayout.h" />

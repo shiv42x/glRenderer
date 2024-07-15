@@ -36,31 +36,33 @@ int main(void)
     }
 
     float positions[] = {
-        -0.5f, -0.5f,
-         0.5f, -0.5f,
-         0.5f,  0.5f,
-        -0.5f,  0.5f
+        -0.5f, -0.5f, 0.5f, 0.5f, 0.0f,
+         0.5f, -0.5f, 0.5f, 0.5f, 0.0f,
+         0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f
     };
+
     unsigned int indices[] = {
         0, 1, 2,
         2, 3, 0
     };
 
     VertexArray va;
-    VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+    VertexBuffer vb(positions, 4 * 5 * sizeof(float));
 
     VertexBufferLayout layout;
     layout.Push(GL_FLOAT, 2);
+    layout.Push(GL_FLOAT, 3);
     va.AddBuffer(vb, layout);
 
     IndexBuffer ib(indices, 6);
 
     Shader shader("res/shaders/vertex.shader", "res/shaders/frag.shader");
     shader.Bind();
-    shader.SetVec4("color", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    //shader.SetVec4("color", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
-    va.Unbind();
     shader.Unbind();
+    va.Unbind();
     vb.Unbind();
     ib.Unbind();
 
