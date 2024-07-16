@@ -6,40 +6,20 @@
 #include "OpenGL/IndexBuffer.h"   
 #include "OpenGL/VertexArray.h"
 #include "OpenGL/Shader.h"
+#include "OpenGL/Texture.h"
+#include "OpenGL/BackEnd/BackEnd.h"
 
 #include <glm/glm.hpp>
 
 #include <iostream>
 
 int main(void)
-{
-    GLFWwindow* window;
-
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
+{ 
     float positions[] = {
-        -0.5f, -0.5f, 0.5f, 0.5f, 0.0f,
-         0.5f, -0.5f, 0.5f, 0.5f, 0.0f,
-         0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f, 1.0f, 0.0f, 0.0f
+        -0.5f, -0.5f, 0.0f, 0.0f,
+         0.5f, -0.5f, 1.0f, 0.0f,
+         0.5f,  0.5f, 1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f, 1.0f,
     };
 
     unsigned int indices[] = {
@@ -47,12 +27,14 @@ int main(void)
         2, 3, 0
     };
 
+    BackEnd::Init();
+
     VertexArray va;
-    VertexBuffer vb(positions, 4 * 5 * sizeof(float));
+    VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 
     VertexBufferLayout layout;
     layout.Push(GL_FLOAT, 2);
-    layout.Push(GL_FLOAT, 3);
+    layout.Push(GL_FLOAT, 2);
     va.AddBuffer(vb, layout);
 
     IndexBuffer ib(indices, 6);
@@ -60,6 +42,10 @@ int main(void)
     Shader shader("res/shaders/vertex.shader", "res/shaders/frag.shader");
     shader.Bind();
     //shader.SetVec4("color", glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+    Texture texture("res/textures/marble.jpg");
+    texture.Bind();
+    shader.SetInt("u_texture", 0);
 
     shader.Unbind();
     va.Unbind();
@@ -69,8 +55,11 @@ int main(void)
     Renderer renderer;
 
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
+    while (BackEnd::IsWindowOpen())
     {
+        /* Polls for events */
+        BackEnd::BeginFrame();
+
         /* Clear screen  */
         renderer.Clear();
 
@@ -78,12 +67,9 @@ int main(void)
         renderer.Draw(va, ib, shader);
 
         /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
+        BackEnd::EndFrame();
     }
 
-    glfwTerminate();
+    BackEnd::CleanUpGLFW();
     return 0;
 }
