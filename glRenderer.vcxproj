@@ -155,6 +155,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Input\InputContext.cpp" />
+    <ClCompile Include="src\Input\InputMapper.cpp" />
+    <ClCompile Include="src\Input\RangeConverter.cpp" />
     <ClCompile Include="src\OpenGL\BackEnd\BackEnd.cpp" />
     <ClCompile Include="src\OpenGL\IndexBuffer.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -167,7 +170,13 @@
     <ClCompile Include="src\OpenGL\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Input\Constants\InputConstants.h" />
+    <ClInclude Include="src\Input\RangeConverter.h" />
+    <ClInclude Include="src\Input\InputContext.h" />
+    <ClInclude Include="src\Input\InputMapper.h" />
+    <ClInclude Include="src\Input\Constants\RawInputs.h" />
     <ClInclude Include="src\OpenGL\BackEnd\BackEnd.h" />
+    <ClInclude Include="src\OpenGL\Camera.h" />
     <ClInclude Include="src\OpenGL\Shader.h" />
     <ClInclude Include="src\OpenGL\IndexBuffer.h" />
     <ClInclude Include="src\OpenGL\Renderer.h" />

@@ -1,0 +1,25 @@
+#pragma once
+
+
+namespace InputMapping
+{
+	enum RawInputButton
+	{
+		RAW_BUTTON_ONE,
+		RAW_BUTTON_TWO,
+		RAW_BUTTON_THREE,
+		RAW_BUTTON_FOUR,
+		RAW_BUTTON_FIVE,
+		RAW_BUTTON_SIX,
+		RAW_BUTTON_SEVEN,
+		RAW_BUTTON_EIGHT,
+		RAW_BUTTON_NINE,
+		RAW_BUTTON_ZERO
+	};
+
+	enum RawInputAxis
+	{
+		RAW_AXIS_MOUSE_X,
+		RAW_AXIS_MOUSE_Y
+	};
+}
