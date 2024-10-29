@@ -35,7 +35,6 @@ namespace InputMapping
 		InputMapper();
 		~InputMapper();
 
-
 	// raw input
 	public:
 		void Clear();

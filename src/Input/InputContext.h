@@ -23,7 +23,7 @@ namespace InputMapping
 		double GetSensitivity(Range range) const;
 
 		const RangeConverter& GetConversions() const { return *Conversions; }
-
+	
 	private:
 		std::map<RawInputButton, Action> ActionMap;
 		std::map<RawInputButton, State> StateMap;

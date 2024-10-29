@@ -132,7 +132,7 @@ void InputMapper::MapAndConsumeButton(RawInputButton button)
 	Action action;
 	State state;
 
-	if (!MapButtonToAction(button, action))
+	if (MapButtonToAction(button, action))
 		CurrentMappedInput.ConsumeAction(action);
 
 	if (MapButtonToState(button, state))
