@@ -3,5 +3,6 @@
 	<parent>
 		<child>Child-0</child>
 		<child>Child-1</child>
+		<attribute>value="50"</attribute>
 	</parent>
 </root>
