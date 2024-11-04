@@ -62,8 +62,7 @@ int main(void)
     float zNear = 0.1f;
     float zFar = 100.0f;
 
-    std::ifstream file("src/Input/Controls.xml");
-    printFile(file);
+    LoadDocument("src/Input/Controls.xml");
 
     /*----------------------------------------*/
 
