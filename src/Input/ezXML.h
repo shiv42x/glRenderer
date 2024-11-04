@@ -2,7 +2,6 @@
 #define ezXML_H
 
 #include <iostream>
-#include <filesystem>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -18,25 +17,22 @@ struct XMLNode
 
 bool LoadDocument(const char* path)
 {
-	FILE* xml_doc = fopen_s(path, "rb");
+	std::fstream xml_doc(path);
 
 	if (!xml_doc)
 	{
-		std::cerr << "Error opening " << path;
+		std::cerr << "Unable to open file " << path << std::endl;
 		return false;
 	}
 
-	fseek(xml_doc, 0, SEEK_END);
-	int size = ftell(xml_doc);
-	fseek(xml_doc, 0, SEEK_SET);
-	
-	// + 1 for null terminating char
-	char* buf = (char*)malloc(size + 1);
-	fread(buf, 1, size, xml_doc);
-	fclose(xml_doc);
-
-	std::cout << buf << std::endl;
+	char ch;
+	while (xml_doc.get(ch))
+	{
+		std::cout << ch;
+	}
+	std::cout << std::endl;
+	xml_doc.close();
+	return true;
 }
-
 
 #endif
