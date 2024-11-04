@@ -26,11 +26,21 @@ bool LoadDocument(const char* path)
 	}
 
 	char ch;
+	char lex[256];
+	int lex_i = 0;
+
 	while (xml_doc.get(ch))
 	{
-		std::cout << ch;
+		if (ch == '<')
+		{
+			while (ch != '>')
+			{
+				lex[lex_i++] = ch;
+			}
+		}
 	}
-	std::cout << std::endl;
+	std::cout << lex << std::endl;
+
 	xml_doc.close();
 	return true;
 }
