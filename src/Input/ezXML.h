@@ -26,16 +26,24 @@ inline bool LoadDocument(const char* path)
 	}
 
 	file.seekg(0, std::ios::end);
-	int size = file.tellg();
+	int length = file.tellg();
 	file.seekg(0, std::ios::beg);
 	
-	// 1 byte for null terminator
-	char* buf = (char*)malloc(sizeof(char) * size + 1);
-	file.read(buf, size);
+	char* buf = (char*)malloc(sizeof(char) * length + 1);
+	file.read(buf, length);
 	file.close();
-	buf[size] = '\0';
 
+	if (!buf)
+	{
+		std::cout << "Failed to allocate memory for file: " << path << std::endl;
+		return false;
+	}
+
+	buf[length] = '\0';
 	std::cout << buf << std::endl;
+
+	free(buf);
 	return true;
 }
+
 #endif
