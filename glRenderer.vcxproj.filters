@@ -60,6 +60,9 @@
     <ClCompile Include="vendor\include\glm\glm.cppm">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Input\ezXML.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\include\stb_image\stb_image.h">
@@ -1681,6 +1684,6 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="src\Input\Controls.xml" />
+    <Xml Include="src\Controls.xml" />
   </ItemGroup>
 </Project>

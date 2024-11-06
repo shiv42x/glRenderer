@@ -15,34 +15,27 @@ struct XMLNode
 	XMLNode* parent;
 };
 
-bool LoadDocument(const char* path)
+inline bool LoadDocument(const char* path)
 {
-	std::fstream xml_doc(path);
+	std::fstream file(path, std::ios::in | std::ios::binary);
 
-	if (!xml_doc)
+	if (!file)
 	{
-		std::cerr << "Unable to open file " << path << std::endl;
+		std::cout << "Failed to open file: " << path << std::endl;
 		return false;
 	}
 
-	char ch;
-	char lex[256];
-	int lex_i = 0;
+	file.seekg(0, std::ios::end);
+	int size = file.tellg();
+	file.seekg(0, std::ios::beg);
+	
+	// 1 byte for null terminator
+	char* buf = (char*)malloc(sizeof(char) * size + 1);
+	file.read(buf, size);
+	file.close();
+	buf[size] = '\0';
 
-	while (xml_doc.get(ch))
-	{
-		if (ch == '<')
-		{
-			while (ch != '>')
-			{
-				lex[lex_i++] = ch;
-			}
-		}
-	}
-	std::cout << lex << std::endl;
-
-	xml_doc.close();
+	std::cout << buf << std::endl;
 	return true;
 }
-
 #endif
