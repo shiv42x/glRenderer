@@ -6,16 +6,41 @@
 #include <string>
 #include <vector>
 
+#define strdup _strdup
+
 struct XMLNode
 {
-	std::string m_tagName;
+	std::string m_tag;
 	std::string m_innerText;
-	std::pair<std::string, std::string> m_attrib;
+	//std::pair<std::string, std::string> m_attrib;
 	
 	XMLNode* parent;
 };
 
-inline bool LoadDocument(const char* path)
+struct XMLDoc
+{
+	char* buf;
+	size_t length;
+	XMLNode* root;
+};
+
+inline XMLNode* CreateNode(XMLNode* parent)
+{
+	XMLNode* node = new XMLNode();
+	node->m_tag = "";
+	node->m_innerText = "";
+	node->parent = parent;
+
+	return node;
+}
+
+inline void DestroyNode(XMLNode* node)
+{
+	//TODO: Recursively delete all children
+	delete node;
+}
+
+inline bool LoadDocument(XMLDoc* doc, const char* path)
 {
 	std::fstream file(path, std::ios::in | std::ios::binary);
 
@@ -42,6 +67,24 @@ inline bool LoadDocument(const char* path)
 	buf[length] = '\0';
 	std::cout << buf << std::endl;
 
+	doc->buf = strdup(buf);
+	doc->length = length;
+	doc->root = CreateNode(nullptr);
+
+	// lexing trackers
+	char lex[256];
+	int lex_i = 0;
+	int buf_i = 0;
+
+	XMLNode* curr = nullptr;
+
+	while (buf[buf_i] != '\0')
+	{
+		
+	}
+
+	std::cout << curr->m_tag << ":" << curr->m_innerText << std::endl;
+	std::cout << "buf_i end at: " << buf_i << std::endl;
 	free(buf);
 	return true;
 }
