@@ -6,8 +6,6 @@
 #include <string>
 #include <vector>
 
-#define strdup _strdup
-
 struct XMLNode
 {
 	std::string m_tag;
@@ -19,7 +17,7 @@ struct XMLNode
 
 struct XMLDoc
 {
-	char* buf;
+	const char* buf;
 	size_t length;
 	XMLNode* root;
 };
@@ -40,6 +38,61 @@ inline void DestroyNode(XMLNode* node)
 	delete node;
 }
 
+inline bool LoadDocument(const char* path, XMLDoc* doc)
+{
+	std::fstream file(path, std::ios::in | std::ios::binary);
+
+	if (!file)
+		std::cout << "Failed to open file: " << path << std::endl;
+
+	file.seekg(0, std::ios::end);
+	int length = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	char* buf = (char*)malloc(sizeof(char) * length + 1);
+	file.read(buf, length);
+	file.close();
+		
+	if (buf)
+	{
+		buf[length] = '\0';
+
+		XMLDoc* doc = new XMLDoc();
+		doc->buf = _strdup(buf);
+		doc->length = length;
+
+		free(buf);
+		return true;
+	}
+	else 
+	{
+		std::cout << "Failed to allocate memory for file: " << path << std::endl;
+		return false;
+	}
+}
+
+inline XMLDoc* ParseDocument(const char* path)
+{
+	XMLDoc* doc = new XMLDoc();
+
+	if (!LoadDocument(path, doc))
+		std::cout << "Failed to load file: " << path << std::endl;
+	
+	// lexing trackers
+	char lex[256];
+	size_t lex_i = 0;
+	size_t buf_i = 0;
+
+	while (doc->buf[buf_i] != '\0')
+	{
+		buf_i++;
+	}
+
+	return doc;
+}
+
+
+/*
 inline bool LoadDocument(XMLDoc* doc, const char* path)
 {
 	std::fstream file(path, std::ios::in | std::ios::binary);
@@ -80,7 +133,19 @@ inline bool LoadDocument(XMLDoc* doc, const char* path)
 
 	while (buf[buf_i] != '\0')
 	{
-		
+		if (buf[buf_i] == '<')
+		{
+			if (!curr)
+
+
+			buf_i++;
+			while (buf[buf_i] != '>')
+				lex[lex_i++] = buf[buf_i++];
+			lex[lex_i] = '\0';
+
+			std::cout << lex << std::endl;
+		}
+		break;
 	}
 
 	std::cout << curr->m_tag << ":" << curr->m_innerText << std::endl;
@@ -88,5 +153,7 @@ inline bool LoadDocument(XMLDoc* doc, const char* path)
 	free(buf);
 	return true;
 }
+*/
+
 
 #endif

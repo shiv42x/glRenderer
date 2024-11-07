@@ -62,7 +62,9 @@ int main(void)
     float zNear = 0.1f;
     float zFar = 100.0f;
 
-    LoadDocument("src/Input/Controls.xml");
+	//XMLDoc* doc = new XMLDoc();
+    XMLDoc* doc = ParseDocument("src/Input/Controls.xml");
+    std::cout << doc->buf << std::endl;
 
     /*----------------------------------------*/
 

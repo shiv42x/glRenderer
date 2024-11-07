@@ -1,8 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?>
-<root>
-	<parent>
-		<child>Child-0</child>
-		<child>Child-1</child>
-		<attribute>value="50"</attribute>
-	</parent>
-</root>
+<root>I am root!</root>
