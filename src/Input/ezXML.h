@@ -4,20 +4,32 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
+
+struct XMLAttrib
+{
+	std::string name;
+	std::string content;
+};
 
 struct XMLNode
 {
-	std::string m_tag;
-	std::string m_innerText;
+	std::string tag;
+	std::string innerText;
 	//std::pair<std::string, std::string> m_attrib;
 	
 	XMLNode* parent;
 };
 
+struct XMLParser
+{
+	char* buffer;
+	size_t position;
+	size_t length;
+};
+
 struct XMLDoc
 {
-	const char* buf;
+	char* buf;
 	size_t length;
 	XMLNode* root;
 };
@@ -25,8 +37,8 @@ struct XMLDoc
 inline XMLNode* CreateNode(XMLNode* parent)
 {
 	XMLNode* node = new XMLNode();
-	node->m_tag = "";
-	node->m_innerText = "";
+	node->tag = "";
+	node->innerText = "";
 	node->parent = parent;
 
 	return node;
@@ -38,7 +50,21 @@ inline void DestroyNode(XMLNode* node)
 	delete node;
 }
 
-inline bool LoadDocument(const char* path, XMLDoc* doc)
+
+inline XMLDoc* ParseDocument(XMLDoc* doc)
+{
+	// copy doc into parsing tracker
+	// parse into nodes
+	XMLParser parser{
+		doc->buf,
+		0,
+		doc->length
+	};
+
+	return doc;
+}
+
+inline XMLDoc* LoadDocument(const char* path)
 {
 	std::fstream file(path, std::ios::in | std::ios::binary);
 
@@ -60,37 +86,18 @@ inline bool LoadDocument(const char* path, XMLDoc* doc)
 		XMLDoc* doc = new XMLDoc();
 		doc->buf = _strdup(buf);
 		doc->length = length;
+		doc->root = nullptr;
 
 		free(buf);
-		return true;
+		doc = ParseDocument(doc);
+		return doc;
 	}
 	else 
 	{
-		std::cout << "Failed to allocate memory for file: " << path << std::endl;
-		return false;
+		std::cerr << "Failed to allocate memory for file: " << path << std::endl;
+		std::exit(-1);
 	}
 }
-
-inline XMLDoc* ParseDocument(const char* path)
-{
-	XMLDoc* doc = new XMLDoc();
-
-	if (!LoadDocument(path, doc))
-		std::cout << "Failed to load file: " << path << std::endl;
-	
-	// lexing trackers
-	char lex[256];
-	size_t lex_i = 0;
-	size_t buf_i = 0;
-
-	while (doc->buf[buf_i] != '\0')
-	{
-		buf_i++;
-	}
-
-	return doc;
-}
-
 
 /*
 inline bool LoadDocument(XMLDoc* doc, const char* path)

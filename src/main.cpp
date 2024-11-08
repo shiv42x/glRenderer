@@ -63,7 +63,7 @@ int main(void)
     float zFar = 100.0f;
 
 	//XMLDoc* doc = new XMLDoc();
-    XMLDoc* doc = ParseDocument("src/Input/Controls.xml");
+    XMLDoc* doc = LoadDocument("src/Input/Controls.xml");
     std::cout << doc->buf << std::endl;
 
     /*----------------------------------------*/
