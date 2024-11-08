@@ -50,6 +50,16 @@ inline void DestroyNode(XMLNode* node)
 	delete node;
 }
 
+inline XMLNode* ParseNode(XMLParser& parser)
+{
+	/*
+		char arrays for tagOpen, tagClose, innerText
+		check for  '<' and consume
+		parse tagClose, accumulate tag name in buffer and check for '>' and consume
+	*/
+
+	return 0;
+}
 
 inline XMLDoc* ParseDocument(XMLDoc* doc)
 {
@@ -78,7 +88,13 @@ inline XMLDoc* LoadDocument(const char* path)
 	char* buf = (char*)malloc(sizeof(char) * length + 1);
 	file.read(buf, length);
 	file.close();
-		
+	
+	if (!length)
+	{
+		std::cerr << "Failed to parse, file empty: " << std::endl;
+		return 0;
+	}
+
 	if (buf)
 	{
 		buf[length] = '\0';
@@ -95,7 +111,7 @@ inline XMLDoc* LoadDocument(const char* path)
 	else 
 	{
 		std::cerr << "Failed to allocate memory for file: " << path << std::endl;
-		std::exit(-1);
+		return 0;
 	}
 }
 
