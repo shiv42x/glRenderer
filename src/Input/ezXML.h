@@ -23,8 +23,8 @@ struct XMLNode
 struct XMLParser
 {
 	char* buffer;
-	size_t position;
 	size_t length;
+	size_t position;
 };
 
 struct XMLDoc

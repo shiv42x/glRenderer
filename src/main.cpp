@@ -4,6 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "Input/ezXML.h"
+
 #include "OpenGL/BackEnd/BackEnd.h"
 #include "OpenGL/Renderer.h"
 #include "OpenGL/VertexBuffer.h"
@@ -12,8 +14,6 @@
 #include "OpenGL/Shader.h"
 #include "OpenGL/Texture.h"
 #include "OpenGL/Camera.h"
-
-#include "Input/ezXML.h"
 
 int main(void)
 {
