@@ -50,12 +50,23 @@ inline void DestroyNode(XMLNode* node)
 	delete node;
 }
 
+/*
+* move parser position ahead by n bytes, but clamp to length of buffer
+*/
+inline void ParserConsume(XMLParser* parser, size_t n)
+{
+	parser->position += n;
+	if (parser->position > parser->length)
+		parser->position = parser->length - 1;
+}
+
 inline XMLNode* ParseNode(XMLParser& parser)
 {
 	/*
 		char arrays for tagOpen, tagClose, innerText
 		check for  '<' and consume
 		parse tagClose, accumulate tag name in buffer and check for '>' and consume
+		check if tagOpen != tagClose, throw mismatch tag error
 	*/
 
 	return 0;
@@ -91,7 +102,7 @@ inline XMLDoc* LoadDocument(const char* path)
 	
 	if (!length)
 	{
-		std::cerr << "Failed to parse, file empty: " << std::endl;
+		std::cerr << "Failed to parse, file empty: " << path << std::endl;
 		return 0;
 	}
 
