@@ -5,16 +5,22 @@
 #include <fstream>
 #include <string>
 
+struct XMLString
+{
+	const char* value;
+	size_t length;
+};
+
 struct XMLAttrib
 {
-	std::string name;
-	std::string content;
+	XMLString* name;
+	XMLString* content;
 };
 
 struct XMLNode
 {
-	std::string tag;
-	std::string innerText;
+	XMLString* tag;
+	XMLString* innerText;
 	//std::pair<std::string, std::string> m_attrib;
 	
 	XMLNode* parent;
@@ -22,7 +28,7 @@ struct XMLNode
 
 struct XMLParser
 {
-	char* buffer;
+	char* buf;
 	size_t length;
 	size_t position;
 };
@@ -34,15 +40,22 @@ struct XMLDoc
 	XMLNode* root;
 };
 
-inline XMLNode* CreateNode(XMLNode* parent)
-{
-	XMLNode* node = new XMLNode();
-	node->tag = "";
-	node->innerText = "";
-	node->parent = parent;
-
-	return node;
-}
+//inline XMLNode* CreateNode(XMLNode* parent)
+//{
+//	XMLNode* node = new XMLNode();
+//
+//	node->tag = new XMLString();
+//	node->tag->value = "";
+//	node->tag->length = 0;
+//
+//	node->innerText = new XMLString();
+//	node->innerText->value = "";
+//	node->innerText->length = 0;
+//
+//	node->parent = parent;
+//
+//	return node;
+//}
 
 inline void DestroyNode(XMLNode* node)
 {
@@ -56,31 +69,59 @@ inline void DestroyNode(XMLNode* node)
 inline void ParserConsume(XMLParser* parser, size_t n)
 {
 	parser->position += n;
+	// clamp to length of buf
 	if (parser->position > parser->length)
 		parser->position = parser->length - 1;
 }
 
-inline XMLNode* ParseNode(XMLParser& parser)
+inline XMLString* ParseEnding(XMLParser* parser)
+{
+
+}
+
+inline XMLString* ParseOpening(XMLParser* parser)
+{
+	//TODO: add skip whitespace
+
+	if (parser->buf[parser->position] != '<')
+	{
+		std::cout << "Failed to match opening tag." << std::endl;
+		return 0; //TODO: add error handling
+	}
+	ParserConsume(parser, 1);
+
+	ParseEnding(parser);
+}
+
+inline XMLNode* ParseNode(XMLParser* parser)
 {
 	/*
-		char arrays for tagOpen, tagClose, innerText
 		check for  '<' and consume
 		parse tagClose, accumulate tag name in buffer and check for '>' and consume
-		check if tagOpen != tagClose, throw mismatch tag error
+		check if opening != close, throw mismatch tag error1
 	*/
+
+	XMLString* openingTag = nullptr;
+	XMLString* closingTag = nullptr;
+	XMLString* content = nullptr;
+
+	openingTag = ParseOpening(parser);
+	if (!openingTag)
+		std::cout << "" << std::endl; //TODO: add error handling
+
+
 
 	return 0;
 }
 
 inline XMLDoc* ParseDocument(XMLDoc* doc)
 {
-	// copy doc into parsing tracker
-	// parse into nodes
 	XMLParser parser{
 		doc->buf,
-		0,
-		doc->length
+		doc->length,
+		0
 	};
+	ParseNode(&parser);
 
 	return doc;
 }
@@ -90,8 +131,8 @@ inline XMLDoc* LoadDocument(const char* path)
 	std::fstream file(path, std::ios::in | std::ios::binary);
 
 	if (!file)
-		std::cout << "Failed to open file: " << path << std::endl;
-
+		std::cout << "Failed to open file: " << path << std::endl;  //TODO: add error handling
+	
 	file.seekg(0, std::ios::end);
 	int length = file.tellg();
 	file.seekg(0, std::ios::beg);
@@ -103,7 +144,7 @@ inline XMLDoc* LoadDocument(const char* path)
 	if (!length)
 	{
 		std::cerr << "Failed to parse, file empty: " << path << std::endl;
-		return 0;
+		return 0; //TODO: add error handling
 	}
 
 	if (buf)
@@ -122,7 +163,7 @@ inline XMLDoc* LoadDocument(const char* path)
 	else 
 	{
 		std::cerr << "Failed to allocate memory for file: " << path << std::endl;
-		return 0;
+		return 0; //TODO: add error handling
 	}
 }
 
