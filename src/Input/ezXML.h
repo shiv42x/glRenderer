@@ -7,7 +7,7 @@
 
 struct XMLString
 {
-	const char* value;
+	std::string value;
 	size_t length;
 };
 
@@ -64,7 +64,8 @@ inline void DestroyNode(XMLNode* node)
 }
 
 /*
-* move parser position ahead by n bytes, but clamp to length of buffer
+* Move parser position ahead by n bytes, 
+* but clamp to length of buffer
 */
 inline void ParserConsume(XMLParser* parser, size_t n)
 {
@@ -74,23 +75,79 @@ inline void ParserConsume(XMLParser* parser, size_t n)
 		parser->position = parser->length - 1;
 }
 
+/*
+* Accumulate any char except whitespace,
+* parse closing of tag ('>') and return accumulated
+*/
 inline XMLString* ParseEnding(XMLParser* parser)
 {
+	//TODO: skip whitespace
+	size_t start = parser->position;
+	size_t length = 0;
 
-}
-
-inline XMLString* ParseOpening(XMLParser* parser)
-{
-	//TODO: add skip whitespace
-
-	if (parser->buf[parser->position] != '<')
+	while (start + length < parser->length)
 	{
-		std::cout << "Failed to match opening tag." << std::endl;
+		if ((parser->buf[parser->position] == '>'))
+			break;
+		else
+		{
+			ParserConsume(parser, 1);
+			length++;
+		}
+	}
+	
+	// consume '>'
+	if (parser->buf[parser->position] != '>')
+	{
+		std::cout << "Missing '>'" << std::endl;
 		return 0; //TODO: add error handling
 	}
 	ParserConsume(parser, 1);
 
-	ParseEnding(parser);
+	XMLString* tagName = new XMLString();
+	tagName->value = std::string(&parser->buf[start], length);
+	tagName->length = length;
+	return tagName;
+}
+
+/*
+* Parse opening tag ('<')
+*/
+inline XMLString* ParseOpening(XMLParser* parser)
+{
+	//TODO: add skip whitespace
+
+	// consume '<'
+	if (parser->buf[parser->position] != '<')
+	{
+		std::cout << "Missing '<'" << std::endl;
+		return 0; //TODO: add error handling
+	}
+	ParserConsume(parser, 1);
+
+	return ParseEnding(parser);
+}
+
+/*
+* Parse closing tag ('</')
+*/
+inline XMLString* ParseClosing(XMLParser* parser)
+{
+	if (parser->position + 1 > parser->length)
+	{
+		std::cout << "Root tag not closed" << std::endl;
+		return 0; //TODO: add error handling
+	}
+
+	if (parser->buf[parser->position] != '<'
+		|| parser->buf[parser->position + 1] != '/')
+	{
+		std::cout << "Closing tag not closed properly." << std::endl;
+		return 0; //TODO: add error handling
+	}
+	ParserConsume(parser, 2);
+	
+	return ParseEnding(parser);
 }
 
 inline XMLNode* ParseNode(XMLParser* parser)
@@ -101,16 +158,35 @@ inline XMLNode* ParseNode(XMLParser* parser)
 		check if opening != close, throw mismatch tag error1
 	*/
 
-	XMLString* openingTag = nullptr;
-	XMLString* closingTag = nullptr;
-	XMLString* content = nullptr;
+	XMLString* openingTag = 0;
+	XMLString* content = 0;
+	XMLString* closingTag = 0;
 
 	openingTag = ParseOpening(parser);
 	if (!openingTag)
 		std::cout << "" << std::endl; //TODO: add error handling
 
+	//TODO: get attributes
+	//TODO: parse content between tags
+	while (parser->buf[parser->position + 1] != '<')
+	{
+		ParserConsume(parser, 1);
+	}
+	ParserConsume(parser, 1);
 
+	closingTag = ParseClosing(parser);
+	if (!closingTag)
+		std::cout << "" << std::endl; //TODO: add error handling
 
+	// add special method to compare XMLStrings
+	if (openingTag->value != closingTag->value)
+	{
+		//TODO: add error handling
+		std::cout << "Tag mismatch: '" << openingTag->value << "' and '" << closingTag->value << "'" << std::endl;
+		return 0;
+	}
+
+	//TODO: create node and return
 	return 0;
 }
 
@@ -154,7 +230,7 @@ inline XMLDoc* LoadDocument(const char* path)
 		XMLDoc* doc = new XMLDoc();
 		doc->buf = _strdup(buf);
 		doc->length = length;
-		doc->root = nullptr;
+		doc->root = 0;
 
 		free(buf);
 		doc = ParseDocument(doc);
