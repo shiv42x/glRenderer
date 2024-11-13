@@ -40,31 +40,20 @@ struct XMLDoc
 	XMLNode* root;
 };
 
-//inline XMLNode* CreateNode(XMLNode* parent)
-//{
-//	XMLNode* node = new XMLNode();
-//
-//	node->tag = new XMLString();
-//	node->tag->value = "";
-//	node->tag->length = 0;
-//
-//	node->innerText = new XMLString();
-//	node->innerText->value = "";
-//	node->innerText->length = 0;
-//
-//	node->parent = parent;
-//
-//	return node;
-//}
 
-inline void DestroyNode(XMLNode* node)
+inline XMLNode* GetDocRoot(XMLDoc* doc)
+{
+	return doc->root;
+}
+
+inline void FreeNode(XMLNode* node)
 {
 	//TODO: Recursively delete all children
 	delete node;
 }
 
 /*
-* Move parser position ahead by n bytes, 
+* Move parser position ahead by n, 
 * but clamp to length of buffer
 */
 inline void ParserConsume(XMLParser* parser, size_t n)
@@ -76,7 +65,7 @@ inline void ParserConsume(XMLParser* parser, size_t n)
 }
 
 /*
-* Accumulate any char except whitespace,
+* Accumulate any char except whitespace (not implemented yet),
 * parse closing of tag ('>') and return accumulated
 */
 inline XMLString* ParseEnding(XMLParser* parser)
@@ -129,6 +118,38 @@ inline XMLString* ParseOpening(XMLParser* parser)
 }
 
 /*
+* Parse content between tags
+*/
+inline XMLString* ParseContent(XMLParser* parser)
+{
+	size_t start = parser->position;
+	size_t length = 0;
+
+	while (start + length < parser->length)
+	{
+		if ((parser->buf[parser->position] == '<'))
+			break;
+		else
+		{
+			ParserConsume(parser, 1);
+			length++;
+		}
+	}
+
+	if (parser->buf[parser->position] != '<')
+	{
+		//TODO: add error handling
+		std::cout << "Expected '<' but reached EOF." << std::endl;
+		return 0;
+	}
+
+	XMLString* content = new XMLString();
+	content->value = std::string(&parser->buf[start], length);
+	content->length = length;
+	return content;
+}
+
+/*
 * Parse closing tag ('</')
 */
 inline XMLString* ParseClosing(XMLParser* parser)
@@ -142,7 +163,8 @@ inline XMLString* ParseClosing(XMLParser* parser)
 	if (parser->buf[parser->position] != '<'
 		|| parser->buf[parser->position + 1] != '/')
 	{
-		std::cout << "Closing tag not closed properly." << std::endl;
+		// split this case into two
+		std::cout << "Closing tag missing '<' or '/'." << std::endl;
 		return 0; //TODO: add error handling
 	}
 	ParserConsume(parser, 2);
@@ -164,19 +186,22 @@ inline XMLNode* ParseNode(XMLParser* parser)
 
 	openingTag = ParseOpening(parser);
 	if (!openingTag)
-		std::cout << "" << std::endl; //TODO: add error handling
+		std::cout << "ParseOpening() returned null." << std::endl; //TODO: add error handling
 
 	//TODO: get attributes
-	//TODO: parse content between tags
-	while (parser->buf[parser->position + 1] != '<')
+	content = ParseContent(parser);
+	if (!content)
 	{
-		ParserConsume(parser, 1);
+		std::cout << "ParseContent() returned null." << std::endl; //TODO: add error handling
+		return 0;
 	}
-	ParserConsume(parser, 1);
 
 	closingTag = ParseClosing(parser);
 	if (!closingTag)
-		std::cout << "" << std::endl; //TODO: add error handling
+	{
+		std::cout << "ParseClosing() returned null." << std::endl; //TODO: add error handling
+		return 0;
+	}
 
 	// add special method to compare XMLStrings
 	if (openingTag->value != closingTag->value)
@@ -186,8 +211,12 @@ inline XMLNode* ParseNode(XMLParser* parser)
 		return 0;
 	}
 
-	//TODO: create node and return
-	return 0;
+	//create node and return
+	//TODO: nested nodes
+	XMLNode* node = new XMLNode();
+	node->tag = openingTag;
+	node->innerText = content;
+	return node;
 }
 
 inline XMLDoc* ParseDocument(XMLDoc* doc)
@@ -197,8 +226,16 @@ inline XMLDoc* ParseDocument(XMLDoc* doc)
 		doc->length,
 		0
 	};
-	ParseNode(&parser);
+	XMLNode* parent = ParseNode(&parser);
 
+	if (!parent)
+	{
+		//TODO: add error handling
+		std::cout << "ParseNode() returned null." << std::endl;
+		return 0;
+	}
+
+	doc->root = parent;
 	return doc;
 }
 

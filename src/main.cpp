@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -64,7 +62,8 @@ int main(void)
 
 	//XMLDoc* doc = new XMLDoc();
     XMLDoc* doc = LoadDocument("src/Input/Controls.xml");
-    std::cout << doc->buf << std::endl;
+    XMLNode* root = GetDocRoot(doc);
+    std::cout << root->tag->value << ": " << root->innerText->value << std::endl;
 
     /*----------------------------------------*/
 
