@@ -1,6 +1,7 @@
 #ifndef ezXML_H
 #define ezXML_H
 
+#include <vector>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -14,16 +15,15 @@ struct XMLString
 struct XMLAttrib
 {
 	XMLString* name;
-	XMLString* content;
+	XMLString* value;
 };
 
 struct XMLNode
 {
 	XMLString* tag;
 	XMLString* innerText;
-	//std::pair<std::string, std::string> m_attrib;
-	
 	XMLNode* parent;
+	std::vector<XMLAttrib> attributes;
 };
 
 struct XMLParser
@@ -50,6 +50,21 @@ inline void FreeNode(XMLNode* node)
 {
 	//TODO: Recursively delete all children
 	delete node;
+}
+
+/*
+* Consume whitespace until non-whitespace found
+*/
+inline void ConsumeWhitespace(XMLParser* parser)
+{
+	while (isspace(parser->buf[parser->position]))
+	{
+		// clamp to length of buffer
+		if (parser->position + 1 >= parser->length)
+			return;
+		else
+			parser->position++;
+	}
 }
 
 /*
@@ -189,6 +204,10 @@ inline XMLNode* ParseNode(XMLParser* parser)
 		std::cout << "ParseOpening() returned null." << std::endl; //TODO: add error handling
 
 	//TODO: get attributes
+
+
+	//TODO: check for self-closing tag
+
 	content = ParseContent(parser);
 	if (!content)
 	{
