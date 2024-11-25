@@ -76,9 +76,10 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 		InitialWhitespaceCheck,
 		NewToken,
 		BuildToken,
-		AttributeValueLiteral,
+		BuildAttributeValueLiteral,
 		ConsumeWhitespace,
-		CompleteToken
+		CompleteToken,
+		EndOfString
 	};
 
 	TokenizerState currState = TokenizerState::InitialWhitespaceCheck;
@@ -102,7 +103,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				if (isspace(currChar[0]))
 				{	
 					// handle error
-					std::cout << "InitialWhitespaceCheck: XML not well formed." << std::endl;
+					std::cout << "InitialWhitespaceCheck: XML not well formed. Char: " << currChar[0] << std::endl;
 					std::exit(-1);
 				}
 				else
@@ -120,7 +121,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				else
 				{
 					// handle error
-					std::cout << "NewToken: XML not well formed." << std::endl;
+					std::cout << "NewToken: XML not well formed. Char: " << currChar[0] << std::endl;
 					std::exit(-1);
 				}
 			}
@@ -128,7 +129,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 			case TokenizerState::BuildToken:
 			{
 				// if char is in allowed charset
-				if (currChar[0] != '>' && currChar[0] != '=' && currChar[0] != '"')
+				if (currChar[0] != '>' && currChar[0] != '=' && currChar[0] != '"' && !isspace(currChar[0]))
 				{
 					currToken += currChar[0];
 					currChar++;
@@ -148,12 +149,15 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				else if (currChar[0] == '"')
 				{
 					// attribute value tokenized!
+					std::cout << tagName << std::endl;
+					std::cout << prevToken << "=" << currToken << std::endl;
+					std::exit(-1);
 					nextState = TokenizerState::CompleteToken;
 				}
 				else
 				{
 					// handle error
-					std::cout << "BuildToken: XML not well formed." << std::endl;
+					std::cout << "BuildToken: XML not well formed. Char: " << currChar[0] << std::endl;
 					std::exit(-1);
 				}
 			}
@@ -168,6 +172,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				}
 				else
 				{
+					std::cout << "Entering CompleteToken on: " << currChar[0] << std::endl;
 					nextState = TokenizerState::CompleteToken;
 				}
 			}
@@ -176,7 +181,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 			case TokenizerState::CompleteToken:
 			{
 				// if char is in allowed charset
-				if (currChar[0] != '>' && currChar[0] != '=' && currChar[0] != '"')
+				if (currChar[0] != '>' && currChar[0] != '=' && currChar[0] != '"' && !isspace(currChar[0]))
 				{
 					if (tagName.empty())
 					{
@@ -189,7 +194,8 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 					else
 					{	
 						// potentially hanging token i.e. not tag_name
-						std::cout << "CompleteToken: XML not well formed." << std::endl;
+						std::cout << "CompleteToken: XML not well formed. Char: " << currChar[0]  << std::endl;
+						std::exit(-1);
 					}
 				}
 				// we have the attribute's name in the token buffer
@@ -208,7 +214,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				{
 					// currToken is guaranteed to be empty here?
 					currChar++;
-					nextState = TokenizerState::BuildToken;
+					nextState = TokenizerState::BuildAttributeValueLiteral;
 				}
 				// consume whitespace, we'll be back in this state after
 				// ...doing so
@@ -217,11 +223,12 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 					nextState = TokenizerState::ConsumeWhitespace;
 				}
 			}
+			break;
 		}
 
 		currState = nextState;
 		// prevToken = currToken;
-		currToken.clear();
+		// currToken.clear();
 	}
 
 	
