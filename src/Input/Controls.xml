@@ -1,1 +1,1 @@
-<root>I am root!</root>
+<root attrib=" value" attrib2   = "value">I am root!</root>

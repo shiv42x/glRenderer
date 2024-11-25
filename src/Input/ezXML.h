@@ -67,6 +67,167 @@ inline void ConsumeWhitespace(XMLParser* parser)
 	}
 }
 
+inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* openingTag)
+{
+	std::vector<XMLAttrib> foundAttributes;
+	
+	enum class TokenizerState : uint8_t
+	{
+		InitialWhitespaceCheck,
+		NewToken,
+		BuildToken,
+		AttributeValueLiteral,
+		ConsumeWhitespace,
+		CompleteToken
+	};
+
+	TokenizerState currState = TokenizerState::InitialWhitespaceCheck;
+	TokenizerState nextState = TokenizerState::InitialWhitespaceCheck;
+	
+	std::string tagName = "";
+	std::string currToken = "";
+	std::string prevToken = "";
+
+	auto currChar = openingTag->value.begin();
+	while (currChar != openingTag->value.end())
+	{
+		/*
+		* BIG NOTE: attr="value" and attr='value' both allowed
+		*/
+		switch (currState)
+		{
+			case TokenizerState::InitialWhitespaceCheck:
+			{
+				// change isspace to lookup set of whitespaces
+				if (isspace(currChar[0]))
+				{	
+					// handle error
+					std::cout << "InitialWhitespaceCheck: XML not well formed." << std::endl;
+					std::exit(-1);
+				}
+				else
+					nextState = TokenizerState::NewToken;
+			}
+			break;
+
+			case TokenizerState::NewToken:
+			{
+				// if char is in allowed charset
+				if (currChar[0] != '>')
+				{
+					nextState = TokenizerState::BuildToken;
+				}
+				else
+				{
+					// handle error
+					std::cout << "NewToken: XML not well formed." << std::endl;
+					std::exit(-1);
+				}
+			}
+
+			case TokenizerState::BuildToken:
+			{
+				// if char is in allowed charset
+				if (currChar[0] != '>' && currChar[0] != '=' && currChar[0] != '"')
+				{
+					currToken += currChar[0];
+					currChar++;
+					nextState = TokenizerState::BuildToken;
+				}
+				else if (isspace(currChar[0]))
+				{
+					nextState = TokenizerState::ConsumeWhitespace;
+				}
+				else if (currChar[0] == '=')
+				{
+					// attribute name tokenized!
+					nextState = TokenizerState::CompleteToken;
+
+				}
+				// note: this matches end-quote
+				else if (currChar[0] == '"')
+				{
+					// attribute value tokenized!
+					nextState = TokenizerState::CompleteToken;
+				}
+				else
+				{
+					// handle error
+					std::cout << "BuildToken: XML not well formed." << std::endl;
+					std::exit(-1);
+				}
+			}
+			break;
+
+			case TokenizerState::ConsumeWhitespace:
+			{
+				if (isspace(currChar[0]))
+				{
+					currChar++;
+					nextState = TokenizerState::ConsumeWhitespace;
+				}
+				else
+				{
+					nextState = TokenizerState::CompleteToken;
+				}
+			}
+			break;
+
+			case TokenizerState::CompleteToken:
+			{
+				// if char is in allowed charset
+				if (currChar[0] != '>' && currChar[0] != '=' && currChar[0] != '"')
+				{
+					if (tagName.empty())
+					{
+						tagName = currToken;
+						prevToken = currToken;
+						currChar++;
+						currToken.clear();
+						nextState = TokenizerState::NewToken;
+					}
+					else
+					{	
+						// potentially hanging token i.e. not tag_name
+						std::cout << "CompleteToken: XML not well formed." << std::endl;
+					}
+				}
+				// we have the attribute's name in the token buffer
+				// how do i set this key:value pair in an XMLAttrib object
+				else if (currChar[0] == '=')
+				{
+					// save attribute name, so we can set it later
+					// ...when we have its value
+					prevToken = currToken;
+					currChar++;
+					currToken.clear();
+					nextState = TokenizerState::CompleteToken;
+				}
+				// note: this matches starting quote
+				else if (currChar[0] = '"')
+				{
+					// currToken is guaranteed to be empty here?
+					currChar++;
+					nextState = TokenizerState::BuildToken;
+				}
+				// consume whitespace, we'll be back in this state after
+				// ...doing so
+				else if (isspace(currChar[0]))
+				{
+					nextState = TokenizerState::ConsumeWhitespace;
+				}
+			}
+		}
+
+		currState = nextState;
+		// prevToken = currToken;
+		currToken.clear();
+	}
+
+	
+	return foundAttributes;
+}
+
 /*
 * Move parser position ahead by n, 
 * but clamp to length of buffer
@@ -204,7 +365,14 @@ inline XMLNode* ParseNode(XMLParser* parser)
 		std::cout << "ParseOpening() returned null." << std::endl; //TODO: add error handling
 
 	//TODO: get attributes
-
+	std::vector<XMLAttrib> attributes = TokenizeOpeningTag(parser, openingTag);
+	if (attributes.size() == 0)
+	{
+		std::cout << openingTag->value << std::endl;
+		std::cout << "No attribs found" << std::endl;
+		std::exit(-1);
+	
+	}
 
 	//TODO: check for self-closing tag
 
