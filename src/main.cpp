@@ -2,7 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "Input/ezXML.h"
+#include "Input/fireXML.h"
 
 #include "OpenGL/BackEnd/BackEnd.h"
 #include "OpenGL/Renderer.h"
@@ -64,6 +64,11 @@ int main(void)
     XMLDoc* doc = LoadDocument("src/Input/Controls.xml");
     XMLNode* root = GetDocRoot(doc);
     std::cout << root->tag->value << ": " << root->innerText->value << std::endl;
+
+    for (auto& attrib : root->attributes)
+    {
+        std::cout << attrib.name->value << '=' << attrib.value->value << std::endl;
+    }
 
     /*----------------------------------------*/
 

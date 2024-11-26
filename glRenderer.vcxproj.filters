@@ -60,7 +60,7 @@
     <ClCompile Include="vendor\include\glm\glm.cppm">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input\ezXML.h">
+    <ClCompile Include="src\Input\fireXML.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

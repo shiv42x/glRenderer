@@ -22,8 +22,10 @@ struct XMLNode
 {
 	XMLString* tag;
 	XMLString* innerText;
-	XMLNode* parent;
 	std::vector<XMLAttrib> attributes;
+
+	XMLNode* parent;
+	XMLNode** children;
 };
 
 struct XMLParser
@@ -53,7 +55,7 @@ inline void FreeNode(XMLNode* node)
 }
 
 /*
-* Consume whitespace until non-whitespace found
+* Consume whitespace until non-whitespace found.
 */
 inline void ConsumeWhitespace(XMLParser* parser)
 {
@@ -67,28 +69,41 @@ inline void ConsumeWhitespace(XMLParser* parser)
 	}
 }
 
-inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* openingTag)
+/*
+* Using a state machine,
+* tokenizes (technically lexes) entire opening tag, 
+* resets openingTag to only contain tag name, 
+* returns array with XMLAttrib structs as name & value pairs.
+* 
+* E.g. openingTag: tag_name attrib1="value" attrib2="value
+* sets openingTag's value to only tag_name
+* returns array of found attributes,
+* i.e. attrib1 & attrib2 along with their values as XMLAttrib structs
+* 
+* TODO: make this into a pure tokenizer, with user defined delimiters?
+*/
+inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* openingTag)
 {
-	std::vector<XMLAttrib> foundAttributes;
-	
 	enum class TokenizerState : uint8_t
 	{
 		InitialWhitespaceCheck,
 		NewToken,
 		BuildToken,
-		ConsumeWhitespace,
+		Whitespace,
 		CompleteToken,
 		EndOfString
 	};
+
+	std::vector<XMLAttrib> foundAttributes;
 
 	TokenizerState currState = TokenizerState::InitialWhitespaceCheck;
 	TokenizerState nextState = TokenizerState::InitialWhitespaceCheck;
 	
 	std::string tagName = "";
 	std::string currToken = "";
-	std::string prevToken = "";
+	std::string currAttribName = "";
 
-	// this bool will be used to include whitespace when tokenizing attribute's value
+	// this bool will be used to include whitespaces when tokenizing attribute's value
 	bool tokenizingAttributeValue = false;
 
 	auto currChar = openingTag->value.begin();
@@ -96,12 +111,11 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 	{
 		/*
 		* BIG NOTE: 
-		* attr="value" and attr='value' both allowed
-		* attr     =  "value"				 allowed
-		* tagName       attr="value"         allowed
+		* /attr="value"/ and /attr='value'/		both allowed
+		* /attr     =  "value"/					allowed
+		* /tagName       attr="value"/			allowed
 		* 
 		* TODO: end of string handling
-		* TODO: multiple attributes
 		* TODO: allow single quotes
 		* TODO: change to use permitted character set lookups
 		*/
@@ -124,6 +138,8 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 			case TokenizerState::NewToken:
 			{
 				// if char is in allowed charset
+				// and not end of string
+				// this is wrong, input string never has < or >
 				if (currChar[0] != '>')
 				{
 					nextState = TokenizerState::BuildToken;
@@ -164,7 +180,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 					nextState = TokenizerState::BuildToken;
 				}
 				// if char is in allowed charset
-				else if (currChar[0] != '>' && currChar[0] != '=' && !isspace(currChar[0]) && currChar[0] != '"')
+				else if (currChar[0] != '=' && !isspace(currChar[0]) && currChar[0] != '"')
 				{
 
 					currToken += currChar[0];
@@ -173,7 +189,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 
 				}
 				// if char is one of the delims (make charset for these)
-				else if (currChar[0] == '>' || currChar[0] == '=' || isspace(currChar[0]))
+				else if (currChar[0] == '=' || isspace(currChar[0]))
 				{
 					nextState = TokenizerState::CompleteToken;
 				}
@@ -186,22 +202,22 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 			}
 			break;
 
-			case TokenizerState::ConsumeWhitespace:
+			case TokenizerState::Whitespace:
 			{
+				// if space, consume it!
 				if (isspace(currChar[0]))
 				{
 					currChar++;
-					nextState = TokenizerState::ConsumeWhitespace;
+					nextState = TokenizerState::Whitespace;
 				}
-				// if whitespace just cleared,
-				// and currChar is quote,
-				// then the case encountered is: 
-				// attrib= "value" (1 or more whitespace between = and opening quote (which is allowed by xml spec)
-				else if (currChar[0] == '"')
+				// if currToken is empty,
+				// build next token
+				else if (currToken.empty())
 				{
 					nextState = TokenizerState::BuildToken;
 				}
-				else
+				// else, have a complete tokenizable string
+				else 
 				{
 					nextState = TokenizerState::CompleteToken;
 				}
@@ -214,7 +230,7 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				// but not when tokenizing attribute's value, since we preserve whitespace there
 				if (isspace(currChar[0]) && !tokenizingAttributeValue)
 				{
-					nextState = TokenizerState::ConsumeWhitespace;
+					nextState = TokenizerState::Whitespace;
 				}
 				// if char is in allowed charset,
 				// then tag name has been tokenized
@@ -223,7 +239,6 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 					if (tagName.empty())
 					{
 						tagName = currToken;
-						prevToken = currToken;
 						//currChar++;
 						currToken.clear();
 						nextState = TokenizerState::NewToken;
@@ -241,20 +256,20 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 				{
 					// save attribute name, so we can set it later
 					// ...when we have its value
-					prevToken = currToken;
+					currAttribName = currToken;
 					currChar++;
 					currToken.clear();
 					nextState = TokenizerState::NewToken;
 				}
-				// if char is ",
+				// if char is " (closing),
 				// then attribute value has been tokenized
 				else if (currChar[0] == '"')
 				{
 					XMLString* attributeName = new XMLString;
 					XMLString* attributeValue = new XMLString;
 
-					attributeName->value = prevToken;
-					attributeName->length = prevToken.size();
+					attributeName->value = currAttribName;
+					attributeName->length = currAttribName.size();
 
 					attributeValue->value = currToken;
 					attributeValue->length = currToken.size();
@@ -262,7 +277,10 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 					XMLAttrib foundAttrib{ attributeName, attributeValue };
 					foundAttributes.push_back(foundAttrib);
 
-					nextState = TokenizerState::EndOfString;
+					currAttribName.clear();
+					currToken.clear();
+					currChar++;
+					nextState = TokenizerState::NewToken;
 				}
 			}
 			break;
@@ -271,12 +289,12 @@ inline std::vector<XMLAttrib> TokenizeOpeningTag(XMLParser* parser, XMLString* o
 			{
 				currChar++;
 			}
+			break;
 		}
 
 		currState = nextState;
 	}
 
-	
 	openingTag->value = tagName;
 	openingTag->length = tagName.size();
 	return foundAttributes;
@@ -295,7 +313,7 @@ inline void ParserConsume(XMLParser* parser, size_t n)
 }
 
 /*
-* Accumulate any char except whitespace (not implemented yet),
+* Accumulate any char,
 * parse closing of tag ('>') and return accumulated
 */
 inline XMLString* ParseEnding(XMLParser* parser)
@@ -331,6 +349,8 @@ inline XMLString* ParseEnding(XMLParser* parser)
 
 /*
 * Parse opening tag ('<')
+* and call ParseEnding to continue 
+* up to '>'
 */
 inline XMLString* ParseOpening(XMLParser* parser)
 {
@@ -418,16 +438,7 @@ inline XMLNode* ParseNode(XMLParser* parser)
 	if (!openingTag)
 		std::cout << "ParseOpening() returned null." << std::endl; //TODO: add error handling
 
-	//TODO: get attributes
-	std::vector<XMLAttrib> attributes = TokenizeOpeningTag(parser, openingTag);
-	if (attributes.size() != 0)
-	{
-		std::cout << openingTag->value << std::endl;
-		std::cout << attributes[0].name->value << ":" << attributes[0].value->value << std::endl;
-
-
-		std::exit(-1);
-	}
+	std::vector<XMLAttrib> attributes = TokenizeAttributes(parser, openingTag);
 
 	//TODO: check for self-closing tag
 
@@ -454,10 +465,12 @@ inline XMLNode* ParseNode(XMLParser* parser)
 	}
 
 	//create node and return
-	//TODO: nested nodes
+	//TODO: nested nodes, note: xml allows nodes to contain text content, as well as child nodes
+
 	XMLNode* node = new XMLNode();
 	node->tag = openingTag;
 	node->innerText = content;
+	node->attributes = attributes;
 	return node;
 }
 
@@ -521,69 +534,5 @@ inline XMLDoc* LoadDocument(const char* path)
 		return 0; //TODO: add error handling
 	}
 }
-
-/*
-inline bool LoadDocument(XMLDoc* doc, const char* path)
-{
-	std::fstream file(path, std::ios::in | std::ios::binary);
-
-	if (!file)
-	{
-		std::cout << "Failed to open file: " << path << std::endl;
-		return false;
-	}
-
-	file.seekg(0, std::ios::end);
-	int length = file.tellg();
-	file.seekg(0, std::ios::beg);
-	
-	char* buf = (char*)malloc(sizeof(char) * length + 1);
-	file.read(buf, length);
-	file.close();
-
-	if (!buf)
-	{
-		std::cout << "Failed to allocate memory for file: " << path << std::endl;
-		return false;
-	}
-
-	buf[length] = '\0';
-	std::cout << buf << std::endl;
-
-	doc->buf = strdup(buf);
-	doc->length = length;
-	doc->root = CreateNode(nullptr);
-
-	// lexing trackers
-	char lex[256];
-	int lex_i = 0;
-	int buf_i = 0;
-
-	XMLNode* curr = nullptr;
-
-	while (buf[buf_i] != '\0')
-	{
-		if (buf[buf_i] == '<')
-		{
-			if (!curr)
-
-
-			buf_i++;
-			while (buf[buf_i] != '>')
-				lex[lex_i++] = buf[buf_i++];
-			lex[lex_i] = '\0';
-
-			std::cout << lex << std::endl;
-		}
-		break;
-	}
-
-	std::cout << curr->m_tag << ":" << curr->m_innerText << std::endl;
-	std::cout << "buf_i end at: " << buf_i << std::endl;
-	free(buf);
-	return true;
-}
-*/
-
 
 #endif
