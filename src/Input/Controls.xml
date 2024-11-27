@@ -1,6 +1,2 @@
-<root 
-	attrib=   "value     " 
-	attrib2   =   "attrib2value!     x" 
-	
-			
-	>I am root!</root>
+<root x="x"
+	  y=".12345    9" >root!</root>

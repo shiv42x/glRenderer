@@ -1,8 +1,8 @@
+#include "Input/fireXML.h"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-
-#include "Input/fireXML.h"
 
 #include "OpenGL/BackEnd/BackEnd.h"
 #include "OpenGL/Renderer.h"

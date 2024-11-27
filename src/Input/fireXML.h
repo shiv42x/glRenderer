@@ -91,7 +91,6 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 		BuildToken,
 		Whitespace,
 		CompleteToken,
-		EndOfString
 	};
 
 	std::vector<XMLAttrib> foundAttributes;
@@ -239,7 +238,6 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 					if (tagName.empty())
 					{
 						tagName = currToken;
-						//currChar++;
 						currToken.clear();
 						nextState = TokenizerState::NewToken;
 					}
@@ -284,15 +282,15 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 				}
 			}
 			break;
-
-			case TokenizerState::EndOfString:
-			{
-				currChar++;
-			}
-			break;
 		}
-
 		currState = nextState;
+	}
+
+	if (!currToken.empty())
+	{
+		// handle error
+		std::cout << "Unhandled token: " << currToken << std::endl;
+		std::exit(-1);
 	}
 
 	openingTag->value = tagName;
