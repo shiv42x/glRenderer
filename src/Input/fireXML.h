@@ -91,6 +91,8 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 		BuildToken,
 		Whitespace,
 		CompleteToken,
+		Malformed,
+		EndOfString
 	};
 
 	std::vector<XMLAttrib> foundAttributes;
@@ -114,9 +116,9 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 		* /attr     =  "value"/					allowed
 		* /tagName       attr="value"/			allowed
 		* 
-		* TODO: end of string handling
 		* TODO: allow single quotes
 		* TODO: change to use permitted character set lookups
+		* TODO: switch from while loop to pure states? solves code outside of state machine
 		*/
 		switch (currState)
 		{
@@ -126,7 +128,7 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 				if (isspace(currChar[0]))
 				{	
 					// handle error
-					std::cout << "InitialWhitespaceCheck: XML not well formed. Char: " << currChar[0] << std::endl;
+					std::cout << "InitialWhitespaceCheck: XML not well formed. At: " << currToken << std::endl;
 					std::exit(-1);
 				}
 				else
@@ -146,7 +148,7 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 				else
 				{
 					// handle error
-					std::cout << "NewToken: XML not well formed. Char: " << currChar[0] << std::endl;
+					std::cout << "NewToken: XML not well formed. At: " << currToken << std::endl;
 					std::exit(-1);
 				}
 			}
@@ -195,7 +197,7 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 				else
 				{
 					// handle error
-					std::cout << "BuildToken: XML not well formed. Char: " << currChar[0] << std::endl;
+					std::cout << "BuildToken: XML not well formed. At: " << currToken << std::endl;
 					std::exit(-1);
 				}
 			}
@@ -244,7 +246,7 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 					else
 					{
 						// potentially hanging token i.e. not tag_name, nor attribute
-						std::cout << "CompleteToken: XML not well formed. Char: " << currChar[0] << std::endl;
+						std::cout << "CompleteToken: XML not well formed. At: " << currToken << std::endl;
 						std::exit(-1);
 					}
 				}
@@ -289,7 +291,7 @@ inline std::vector<XMLAttrib> TokenizeAttributes(XMLParser* parser, XMLString* o
 	if (!currToken.empty())
 	{
 		// handle error
-		std::cout << "Unhandled token: " << currToken << std::endl;
+		std::cout << "Hanging attribute: " << currToken << std::endl;
 		std::exit(-1);
 	}
 
